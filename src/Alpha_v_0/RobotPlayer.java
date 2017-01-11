@@ -27,7 +27,7 @@ public strictfp class RobotPlayer {
                 Archon.run(rc);
                 break;
             case GARDENER:
-                runGardener();
+                Gardener.run(rc);
                 break;
             case SOLDIER:
                 runSoldier();
