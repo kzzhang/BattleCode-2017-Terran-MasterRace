@@ -7,9 +7,7 @@ import battlecode.common.*;
  */
 
 public class Archon{
-    private static RobotController rc;
-    public static void run(RobotController _rc) throws GameActionException{
-        rc = _rc;
+    public static void run(RobotController rc) throws GameActionException{
         while (true){
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
@@ -21,6 +19,8 @@ public class Archon{
                     }
                 }
 
+                Util.dodge(rc);
+                //Find best case movement -> if unavoidable take the lowest damage bullet
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println("Archon Exception");
