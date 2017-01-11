@@ -6,9 +6,9 @@ import battlecode.common.*;
  * Created by patri on 2017-01-11.
  */
 public class Util {
-    public static void dodge(RobotController rc) throws GameActionException{
+    public static boolean dodge(RobotController rc) throws GameActionException{
         BulletInfo[] visibleBullets = rc.senseNearbyBullets();
-        int bestCase = 0;
+        float bestCase = 0;
         float moveRads = -1;
         for (BulletInfo bullet : visibleBullets){
             //Create projection of bullet
@@ -23,17 +23,19 @@ public class Util {
             }
         }
 
+
         if (bestCase != 0)
         //If a hit is projected, find alternatives
         {
             //Check paths 0.05 rad apart (~2.5 deg)
             for (float i = (float) 0.0; i < 2 * Math.PI; i += 0.05){
 
-                int currentCase = 0;
+                float currentCase = 0;
                 for (BulletInfo bullet : visibleBullets){
 
                     MapLocation testLocation = rc.getLocation();
-                    testLocation.add(new Direction(i), rc.getType().strideRadius * (int)(bullet.getSpeed() / bullet.getLocation().distanceTo(rc.getLocation())));
+                    testLocation = testLocation.add(new Direction(i), rc.getType().strideRadius);
+                    //* (int)(bullet.getSpeed() / bullet.getLocation().distanceTo(rc.getLocation()) + 1)
 
                     //Create projection of bullet
                     float deltaRads = bullet.getDir().radiansBetween(new Direction(bullet.getLocation(), testLocation));
@@ -47,6 +49,7 @@ public class Util {
                     }
                 }
                 if (currentCase < bestCase){
+                    System.out.println(Float.toString(currentCase) + "," +  Float.toString(bestCase));
                     bestCase = currentCase;
                     moveRads = i;
                 }
@@ -55,6 +58,9 @@ public class Util {
 
         if (moveRads != -1 && rc.canMove(new Direction(moveRads))){
             rc.move(new Direction(moveRads));
+            return true;
+        }else{
+            return false;
         }
     }
 }

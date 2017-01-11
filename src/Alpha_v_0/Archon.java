@@ -8,13 +8,15 @@ import battlecode.common.*;
 
 public class Archon{
     public static void run(RobotController rc) throws GameActionException{
+        int GardenerCount = 0;
         while (true){
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 for (float d = (float)(0.0); d < Math.PI; d += 0.1){
                     Direction dir = new Direction(d);
-                    if (rc.canHireGardener(dir)){
+                    if (rc.canHireGardener(dir) && GardenerCount < 3){
                         rc.hireGardener(dir);
+                        GardenerCount++;
                         break;
                     }
                 }

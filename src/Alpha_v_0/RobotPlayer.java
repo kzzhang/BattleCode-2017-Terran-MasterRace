@@ -90,12 +90,9 @@ public strictfp class RobotPlayer {
                 Direction dir = randomDirection();
 
                 // Randomly attempt to build a soldier or lumberjack in this direction
-                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && Math.random() < .01) {
+                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && Math.random() < .02) {
                     rc.buildRobot(RobotType.SOLDIER, dir);
-                } else if (rc.canBuildRobot(RobotType.LUMBERJACK, dir) && Math.random() < .01 && rc.isBuildReady()) {
-                    rc.buildRobot(RobotType.LUMBERJACK, dir);
                 }
-
                 // Move randomly
                 tryMove(randomDirection());
 
@@ -132,9 +129,9 @@ public strictfp class RobotPlayer {
                     }
                 }
 
-                // Move randomly
-                tryMove(randomDirection());
-
+                if (!Util.dodge(rc)) {
+                    //tryMove(randomDirection());
+                }
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
 
