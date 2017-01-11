@@ -5,6 +5,11 @@ public strictfp class RobotPlayer {
     static RobotController rc;
 
     /**
+     * Ideas
+     *      ~Optimal attack strat may be semicircle since bullets friendly fire is on
+     * **/
+
+    /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
     **/
@@ -19,7 +24,7 @@ public strictfp class RobotPlayer {
         // You can add the missing ones or rewrite this into your own control structure.
         switch (rc.getType()) {
             case ARCHON:
-                runArchon();
+                Archon.run(rc);
                 break;
             case GARDENER:
                 runGardener();
@@ -70,7 +75,6 @@ public strictfp class RobotPlayer {
 
 	static void runGardener() throws GameActionException {
         System.out.println("I'm a gardener!");
-
         // The code you want your robot to perform every round should be in this loop
         while (true) {
 
