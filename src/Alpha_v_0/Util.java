@@ -34,8 +34,7 @@ public class Util {
                 for (BulletInfo bullet : visibleBullets){
 
                     MapLocation testLocation = rc.getLocation();
-                    testLocation = testLocation.add(new Direction(i), rc.getType().strideRadius);
-                    //* (int)(bullet.getSpeed() / bullet.getLocation().distanceTo(rc.getLocation()) + 1)
+                    testLocation = testLocation.add(new Direction(i), rc.getType().strideRadius * (int)(bullet.getSpeed() / bullet.getLocation().distanceTo(rc.getLocation()) + 1));
 
                     //Create projection of bullet
                     float deltaRads = bullet.getDir().radiansBetween(new Direction(bullet.getLocation(), testLocation));
