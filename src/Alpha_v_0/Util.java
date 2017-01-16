@@ -6,7 +6,7 @@ import battlecode.common.*;
  * Created by patri on 2017-01-11.
  */
 public class Util {
-    public static final int channel_unit_counts = 994; //up to 1029
+    public static final int channel_unit_counts = 994; //up to 1000
 
     public static final int type_gardener = 0;
     public static final int type_soldier = 1;
@@ -14,6 +14,8 @@ public class Util {
     public static final int type_tank = 3;
     public static final int type_scout = 4;
     public static final int type_lumberjack = 5;
+    
+    public static final float PI = (float) 3.14;
 
     private static RobotController rc;
 
@@ -24,6 +26,7 @@ public class Util {
         try {
             return rc.readBroadcast(channel_unit_counts + type);
         }catch (Exception e){
+            System.out.println("Error:getUnitCount:: Failed to get type: " + Integer.toString(type));
             return -1;
         }
     }
@@ -37,7 +40,7 @@ public class Util {
 
             System.out.println(getUnitCount(type));
         }catch (Exception e){
-
+            System.out.println("Error:incrementUnitCount:: Failed to increment type: " + Integer.toString(type));
         }
     }
 
@@ -102,13 +105,13 @@ public class Util {
             if (closest_robot != null) {
                 Direction directionToClosetEnemy = rc.getLocation().directionTo(closest_robot.getLocation());
                 delta_rot = directionToClosetEnemy.radians;
-                delta_rot += Math.PI / 2;
-                delta_rot %= Math.PI * 2;
+                delta_rot += Util.PI / 2;
+                delta_rot %= Util.PI * 2;
             }
 
             //Check paths 0.05 rad apart (~2.5 deg)
-            for (float x = delta_rot; x < 2 * Math.PI + delta_rot; x += 0.1){
-                float i = x % (float) (2 * Math.PI);
+            for (float x = delta_rot; x < 2 * Util.PI + delta_rot; x += 0.1){
+                float i = x % (float) (2 * Util.PI);
                 float currentCase = 0;
                 for (BulletInfo bullet : visibleBullets){
 
@@ -132,7 +135,7 @@ public class Util {
                     moveRads = i;
 
                 }
-                if (Clock.getBytecodesLeft() < 500){
+                if (bestCase == 0 || Clock.getBytecodesLeft() < 500){
                     break;
                 }
             }

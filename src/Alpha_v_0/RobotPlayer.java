@@ -8,6 +8,13 @@ public strictfp class RobotPlayer {
     /**
      * Ideas
      *      ~Optimal attack strat may be semicircle since bullets friendly fire is on
+     *      ~Help broadcast sector in broadcasts
+     *      ~Strategy modes
+     *          ~If there are a lot of trees, lumberjack mode
+     *              -Build lumberjacks use the robots from trees to go HIGH AGRO
+     *              -No running away
+     *          ~Basic strat
+     *              -Farm, build soldiers, fight
      * **/
 
     /**
