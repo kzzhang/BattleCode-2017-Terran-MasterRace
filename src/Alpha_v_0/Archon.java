@@ -14,7 +14,7 @@ public class Archon{
             try {
                 for (float d = (float)(0.0); d < Math.PI; d += 0.1){
                     Direction dir = new Direction(d);
-                    if (rc.canHireGardener(dir) && GardenerCount < 3){
+                    if (rc.canHireGardener(dir) && Math.random() < (.01/(2*Math.PI))){
                         rc.hireGardener(dir);
                         GardenerCount++;
                         break;

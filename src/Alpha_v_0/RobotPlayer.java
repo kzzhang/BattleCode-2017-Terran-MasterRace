@@ -1,5 +1,6 @@
 package Alpha_v_0;
 import battlecode.common.*;
+import scala.tools.cmd.gen.AnyVals;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -20,19 +21,26 @@ public strictfp class RobotPlayer {
         // and to get information on its current status.
         RobotPlayer.rc = rc;
 
+        Util.init(rc);
+
         // Here, we've separated the controls into a different method for each RobotType.
         // You can add the missing ones or rewrite this into your own control structure.
         switch (rc.getType()) {
             case ARCHON:
+                Util.incrementUnitCount(Util.type_archon);
                 Archon.run(rc);
                 break;
             case GARDENER:
-                Gardener.run(rc);
+                Util.incrementUnitCount(Util.type_gardener);
+                //Gardener.run(rc);
+                runGardener(); //PLO: Need this for testing - Pat
                 break;
             case SOLDIER:
+                Util.incrementUnitCount(Util.type_soldier);
                 runSoldier();
                 break;
             case LUMBERJACK:
+                Util.incrementUnitCount(Util.type_lumberjack);
                 runLumberjack();
                 break;
         }
@@ -130,7 +138,10 @@ public strictfp class RobotPlayer {
                 }
 
                 if (!Util.dodge(rc)) {
-                    tryMove(randomDirection());
+                    Direction dir = randomDirection();
+                    if (Util.safeMove(rc, dir) == 0) {
+                        tryMove(dir);
+                    }
                 }
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
