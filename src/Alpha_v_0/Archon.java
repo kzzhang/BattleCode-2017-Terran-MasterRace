@@ -2,16 +2,34 @@ package Alpha_v_0;
 
 import battlecode.common.*;
 
+import static Alpha_v_0.Util.channel_requests;
+import static Alpha_v_0.Util.channel_requests_size;
+
 /**
  * Created by Patrick on 2017-01-10.
  */
 
-public class Archon{
-    public static void run(RobotController rc) throws GameActionException{
+public class Archon extends Robot{
+    @Override
+    public void run(RobotController rc) throws GameActionException{
+        Util.init(this, rc);
+        Util.incrementUnitCount(Util.type_archon);
         int GardenerCount = 0;
         while (true){
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
+                Util.Comms.ClearRequest(getHelpCallback());
+
+                for (int i = channel_requests; i < channel_requests + channel_requests_size; i += 4) {
+                    int tickerVal = rc.readBroadcast(i + 3);
+                    if (tickerVal > 0){
+                        rc.broadcast(i + 3, tickerVal - 1);
+                        if (tickerVal - 1 == 0){
+                            rc.broadcast(i, Util.Comms.help_type_null);
+                        }
+                    }
+                }
+
                 for (float d = (float)(0.0); d < Math.PI; d += 0.1){
                     Direction dir = new Direction(d);
                     if (rc.canHireGardener(dir) && Math.random() < (.01/(2*Math.PI))){
@@ -29,5 +47,11 @@ public class Archon{
                 e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void onDeathImmenent() {
+        super.onDeathImmenent();
+        //Decrement unit count
     }
 }

@@ -28,26 +28,25 @@ public strictfp class RobotPlayer {
         // and to get information on its current status.
         RobotPlayer.rc = rc;
 
-        Util.init(rc);
+
 
         // Here, we've separated the controls into a different method for each RobotType.
         // You can add the missing ones or rewrite this into your own control structure.
         switch (rc.getType()) {
             case ARCHON:
-                Util.incrementUnitCount(Util.type_archon);
-                Archon.run(rc);
+
+                Archon archon = new Archon();
+                archon.run(rc);
                 break;
             case GARDENER:
-                Util.incrementUnitCount(Util.type_gardener);
-                //Gardener.run(rc);
-                runGardener(); //PLO: Need this for testing - Pat
+                Gardener.run(rc);
+                //runGardener(); //PLO: Need this for testing - Pat
                 break;
             case SOLDIER:
-                Util.incrementUnitCount(Util.type_soldier);
-                runSoldier();
+                Soldier soldier = new Soldier();
+                soldier.run(rc);
                 break;
             case LUMBERJACK:
-                Util.incrementUnitCount(Util.type_lumberjack);
                 runLumberjack();
                 break;
         }

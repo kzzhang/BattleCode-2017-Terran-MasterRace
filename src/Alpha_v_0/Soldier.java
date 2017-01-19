@@ -5,13 +5,18 @@ import battlecode.common.*;
 /**
  * Created by patri on 2017-01-16.
  */
-public class Soldier {
-    public static void run(RobotController rc) throws GameActionException {
+public class Soldier extends Robot{
+    @Override
+    public void run(RobotController rc) throws GameActionException {
+        Util.init(this, rc);
+        Util.incrementUnitCount(Util.type_soldier);
+
         System.out.println("I'm an soldier!");
         Team enemy = rc.getTeam().opponent();
 
         // The code you want your robot to perform every round should be in this loop
         while (true) {
+
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
@@ -30,10 +35,32 @@ public class Soldier {
                 }
 
                 if (!Util.dodge(rc)) {
-                    Direction dir = RobotPlayer.randomDirection();
-                    if (Util.safeMove(rc, dir) == 0) {
-                        RobotPlayer.tryMove(dir);
+                    Util.Comms.ClearRequest(getHelpCallback());
+
+
+                    MapLocation[] fightLocations = Util.Comms.getHelpRequestLocations(Util.Comms.help_type_fight);
+
+                    MapLocation closestFight = null;
+                    float closestDist = Float.MAX_VALUE;
+                    for (MapLocation m : fightLocations){
+                        float testDist = m.distanceSquaredTo(rc.getLocation());
+                        if (testDist < closestDist){
+                            closestDist = testDist;
+                            closestFight = m;
+                        }
                     }
+
+                    Direction dir = new Direction((float)Math.random() * 2 * (float)Math.PI);
+                    if (closestFight != null){
+                        System.out.println("Helping Comrade at :" + closestFight.toString());
+                        dir = new Direction(rc.getLocation(), closestFight);
+                    }
+                    if (rc.canMove(dir))
+                        rc.move(dir);
+
+                    /*if (Util.safeMove(rc, dir) == 0) {
+                        RobotPlayer.tryMove(dir);
+                    }*/
                 }
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
@@ -43,5 +70,10 @@ public class Soldier {
                 e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void onDeathImmenent(){
+        super.onDeathImmenent();
     }
 }
