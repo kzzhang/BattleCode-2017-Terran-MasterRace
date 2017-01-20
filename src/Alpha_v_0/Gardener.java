@@ -18,18 +18,21 @@ public class Gardener {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
+                // Generate a random direction
+                Direction dir = randomDirection();
+                if (rc.canPlantTree(dir)) {
+                    rc.plantTree(dir);
+                }
 
                 // Listen for home archon's location
                 //int xPos = rc.readBroadcast(0);
                 //int yPos = rc.readBroadcast(1);
                 //MapLocation archonLoc = new MapLocation(xPos,yPos);
 
-                // Generate a random direction
-                Direction dir = randomDirection();
 
                 boolean shaken = false;
                 Team self = rc.getTeam();
-                TreeInfo[] nearby = rc.senseNearbyTrees((float)7.0, NEUTRAL);
+                TreeInfo[] nearby = rc.senseNearbyTrees((float)7.0, self);
                 RobotInfo[] friendlyClose = rc.senseNearbyRobots((float)7, self);
 
                 for (int i = 0; i<nearby.length; i++){
@@ -42,14 +45,13 @@ public class Gardener {
 
                 //if no shake available
                 if (!shaken){
-                    int numTrees = 0;
                     MapLocation posClosestNeutral = null;
                     float distanceToTree = -1;
                     int start = 0;
 
                     //find first tree nearby with bullets available
                     for (int i = 0; i<nearby.length; i++){
-                        if (nearby[i].getContainedBullets() > 1.0){
+                        if (nearby[i].getContainedBullets() > 2.0){
                             posClosestNeutral = nearby[i].getLocation();
                             distanceToTree = Distance.find(rc.getLocation(), posClosestNeutral);
                             start = i;
@@ -76,9 +78,7 @@ public class Gardener {
                                         }
                                     }
                                 }
-                                System.out.println("Here!");
                                 if (!found) {
-                                    System.out.println("conflict!");
                                     posClosestNeutral = nearby[i].getLocation();
                                     distanceToTree = Distance.find(rc.getLocation(), posClosestNeutral);
                                 }
