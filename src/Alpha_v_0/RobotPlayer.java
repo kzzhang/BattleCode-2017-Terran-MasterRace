@@ -35,19 +35,23 @@ public strictfp class RobotPlayer {
         switch (rc.getType()) {
             case ARCHON:
 
-                Archon archon = new Archon();
-                archon.run(rc);
+                Archon archon = new Archon(rc, Util.type_archon);
+                archon.run();
                 break;
             case GARDENER:
                 Gardener.run(rc);
                 //runGardener(); //PLO: Need this for testing - Pat
                 break;
             case SOLDIER:
-                Soldier soldier = new Soldier();
-                soldier.run(rc);
+                Soldier soldier = new Soldier(rc, Util.type_soldier);
+                soldier.run();
                 break;
             case LUMBERJACK:
                 runLumberjack();
+                break;
+            case SCOUT:
+                Scout scout = new Scout(rc, Util.type_scout);
+                scout.run();
                 break;
         }
 	}

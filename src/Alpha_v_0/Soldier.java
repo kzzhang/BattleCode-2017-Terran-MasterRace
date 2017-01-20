@@ -6,9 +6,12 @@ import battlecode.common.*;
  * Created by patri on 2017-01-16.
  */
 public class Soldier extends Robot{
+    Soldier(RobotController rc, int type){
+        super(rc, type);
+    }
+
     @Override
-    public void run(RobotController rc, int type) throws GameActionException {
-        super.run(rc, type);
+    public void run() throws GameActionException {
 
         System.out.println("I'm an soldier!");
         Team enemy = rc.getTeam().opponent();

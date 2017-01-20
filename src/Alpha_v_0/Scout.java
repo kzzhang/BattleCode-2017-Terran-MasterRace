@@ -7,9 +7,12 @@ import battlecode.common.RobotController;
  * Created by patri on 2017-01-19.
  */
 public class Scout extends Robot{
+    Scout(RobotController rc, int type){
+        super(rc, type);
+    }
     @Override
-    public void run(RobotController rc, int type) throws GameActionException {
-        super.run(rc, type);
+    public void run() throws GameActionException {
+
 
     }
 }

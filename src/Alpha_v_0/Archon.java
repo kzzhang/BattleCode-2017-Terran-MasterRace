@@ -10,10 +10,11 @@ import static Alpha_v_0.Util.channel_requests_size;
  */
 
 public class Archon extends Robot{
+    Archon(RobotController rc, int type){
+        super(rc, type);
+    }
     @Override
-    public void run(RobotController rc, int type) throws GameActionException{
-        super.run(rc, type);
-
+    public void run() throws GameActionException{
         int GardenerCount = 0;
         while (true){
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode

@@ -7,7 +7,19 @@ import battlecode.common.RobotController;
  * Created by patri on 2017-01-17.
  */
 public abstract class Robot{
+    RobotController rc;
+    final int robotType;
+
     private int help_callback = -1;
+
+    Robot(RobotController _rc, int type){
+        rc = _rc;
+        robotType = type;
+        Util.init(this, _rc);
+        Util.incrementUnitCount(type);
+    }
+
+
     public void setHelpCallback(int callback){
         help_callback = callback;
     }
@@ -18,8 +30,5 @@ public abstract class Robot{
         System.out.println("Dying...");
         Util.Comms.ClearRequest(help_callback);
     }
-    public void run(RobotController rc, int type) throws GameActionException{
-        Util.init(this, rc);
-        Util.incrementUnitCount(type);
-    }
+    public abstract void run() throws GameActionException;
 }
