@@ -9,20 +9,20 @@ import static battlecode.common.Team.NEUTRAL;
 /**
  * Created by kzhan_000 on 2017-01-11.
  */
-public class Gardener {
-    private static RobotController rc;
+public class Gardener extends Robot{
+    TreeInfo lastPlanted = null;
+    Gardener(RobotController rc, int type){
+        super(rc, type);
+    }
 
-    public static void run(RobotController _rc) throws GameActionException {
-        rc = _rc;
+    @Override
+    public void run() throws GameActionException {
         while (true) {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 // Generate a random direction
                 Direction dir = randomDirection();
-                if (rc.canPlantTree(dir)) {
-                    rc.plantTree(dir);
-                }
 
                 // Listen for home archon's location
                 //int xPos = rc.readBroadcast(0);
@@ -31,9 +31,56 @@ public class Gardener {
 
 
                 boolean shaken = false;
+                boolean planting = true;
                 Team self = rc.getTeam();
-                TreeInfo[] nearby = rc.senseNearbyTrees((float)7.0, self);
-                RobotInfo[] friendlyClose = rc.senseNearbyRobots((float)7, self);
+                TreeInfo[] close = rc.senseNearbyTrees((float)3.2, self);
+                //RobotInfo[] friendlyClose = rc.senseNearbyRobots((float)7, self);
+
+                if (planting) {
+                    boolean shouldPlant = true;
+                    for (double i = 0.1; i < (3.14159*2); i+= 0.1){
+                        float angle = dir.radians + (float)i;
+                        if (angle > (3.14159*2)) {angle -= (3.14159*2);}
+                        Direction positive = new Direction(angle);
+                        MapLocation newTree = rc.getLocation().add(positive, (float)1.0);
+                        for (TreeInfo tree : close){
+                            if (newTree.distanceTo(tree.getLocation())<= (float)3) {
+                                shouldPlant = false;
+                                break;
+                            }
+                        }
+                        if (shouldPlant){
+                            if (rc.canPlantTree(positive)){
+                                rc.plantTree(positive);
+                            }
+                        }
+                    }
+                }
+
+                TreeInfo[] nearby = rc.senseNearbyTrees((float)5.0, self);
+                //watering
+                TreeInfo target = null;
+                for (TreeInfo tree : nearby){
+                    if (tree.getHealth() < 45 && rc.canWater(tree.getLocation())){
+                        //if (target == null) {target = tree;}
+                        //else if (target.getHealth()>tree.getHealth()){
+                            target = tree;
+                        //}
+                    }
+                }
+                rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
+                rc.setIndicatorDot(target.getLocation(), 0, 0, 255);
+                if (target != null){
+                    if (rc.canWater(target.getLocation())){
+                        rc.water(target.getLocation());
+                    }
+                    else {
+                        rc.move(target.getLocation());
+                        if (rc.canWater(target.getLocation())) {
+                            rc.water(target.getLocation());
+                        }
+                    }
+                }
 
                 for (int i = 0; i<nearby.length; i++){
                     if (rc.canShake(nearby[i].getID()) && nearby[i].getContainedBullets() >= 1){
@@ -42,7 +89,7 @@ public class Gardener {
                         i = nearby.length;
                     }
                 }
-
+                /*
                 //if no shake available
                 if (!shaken){
                     MapLocation posClosestNeutral = null;
@@ -124,7 +171,7 @@ public class Gardener {
                         }
                     }
                 }
-
+                */
                 // Randomly attempt to build a soldier or lumberjack in this direction
                 if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
                     rc.buildRobot(RobotType.SOLDIER, dir);
