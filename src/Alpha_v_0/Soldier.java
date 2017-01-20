@@ -7,9 +7,8 @@ import battlecode.common.*;
  */
 public class Soldier extends Robot{
     @Override
-    public void run(RobotController rc) throws GameActionException {
-        Util.init(this, rc);
-        Util.incrementUnitCount(Util.type_soldier);
+    public void run(RobotController rc, int type) throws GameActionException {
+        super.run(rc, type);
 
         System.out.println("I'm an soldier!");
         Team enemy = rc.getTeam().opponent();

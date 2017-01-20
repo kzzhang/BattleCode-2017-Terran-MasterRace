@@ -18,5 +18,8 @@ public abstract class Robot{
         System.out.println("Dying...");
         Util.Comms.ClearRequest(help_callback);
     }
-    public abstract void run(RobotController rc) throws GameActionException;
+    public void run(RobotController rc, int type) throws GameActionException{
+        Util.init(this, rc);
+        Util.incrementUnitCount(type);
+    }
 }
