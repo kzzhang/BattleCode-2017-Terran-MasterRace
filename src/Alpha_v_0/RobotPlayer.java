@@ -1,6 +1,6 @@
 package Alpha_v_0;
 import battlecode.common.*;
-import scala.tools.cmd.gen.AnyVals;
+
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -39,8 +39,8 @@ public strictfp class RobotPlayer {
                 archon.run();
                 break;
             case GARDENER:
-                Gardener.run(rc);
-                //runGardener(); //PLO: Need this for testing - Pat
+                //Gardener.run(rc);
+                runGardener(); //PLO: Need this for testing - Pat
                 break;
             case SOLDIER:
                 Soldier soldier = new Soldier(rc, Util.type_soldier);
@@ -147,7 +147,7 @@ public strictfp class RobotPlayer {
                     }
                 }
 
-                if (!Util.dodge(rc)) {
+                if (!Util.dodge()) {
                     Direction dir = randomDirection();
                     if (Util.safeMove(rc, dir) == 0) {
                         tryMove(dir);
