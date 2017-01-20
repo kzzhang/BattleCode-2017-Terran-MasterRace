@@ -39,8 +39,14 @@ public class Gardener extends Robot{
                 if (planting) {
                     boolean shouldPlant = true;
                     for (double i = 0.1; i < (3.14159*2); i+= 0.1){
-                        float angle = dir.radians + (float)i;
-                        if (angle > (3.14159*2)) {angle -= (3.14159*2);}
+                        float angle;
+                        if (lastPlanted != null){
+                            angle = new Direction(rc.getLocation(), lastPlanted.getLocation()).radians + (float)i;
+                        }
+                        else{
+                            angle = dir.radians + (float)i;
+                        }
+                        if (angle > (3.14159)) {angle -= (3.14159*2);}
                         Direction positive = new Direction(angle);
                         MapLocation newTree = rc.getLocation().add(positive, (float)1.0);
                         for (TreeInfo tree : close){
@@ -54,6 +60,7 @@ public class Gardener extends Robot{
                                 rc.plantTree(positive);
                             }
                         }
+                        lastPlanted = rc.senseTreeAtLocation(newTree);
                     }
                 }
 
@@ -62,10 +69,10 @@ public class Gardener extends Robot{
                 TreeInfo target = null;
                 for (TreeInfo tree : nearby){
                     if (tree.getHealth() < 45 && rc.canWater(tree.getLocation())){
-                        //if (target == null) {target = tree;}
-                        //else if (target.getHealth()>tree.getHealth()){
+                        if (target == null) {target = tree;}
+                        else if (target.getHealth()>tree.getHealth()){
                             target = tree;
-                        //}
+                        }
                     }
                 }
                 rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
