@@ -31,7 +31,7 @@ public class Archon extends Robot{
                     }
                 }
 
-                for (float d = (float) -(Math.PI); d < Math.PI; d += 0.1){
+                for (float d = (float)(0.0); d < Math.PI; d += 0.1){
                     Direction dir = new Direction(d);
                     if (rc.canHireGardener(dir) && Math.random() < (.01/(2*Math.PI))){
                         rc.hireGardener(dir);
@@ -40,7 +40,7 @@ public class Archon extends Robot{
                     }
                 }
 
-                Util.dodge();
+                Util.dodge(rc);
                 //Find best case movement -> if unavoidable take the lowest damage bullet
                 Clock.yield();
             } catch (Exception e) {

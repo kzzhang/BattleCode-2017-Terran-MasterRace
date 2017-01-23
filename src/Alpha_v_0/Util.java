@@ -84,14 +84,12 @@ public class Util {
         return currentCase;
     }
 
-    public static boolean dodge() throws GameActionException{
+    public static boolean dodge(RobotController rc) throws GameActionException{
         //TODO: Avoid map edges
 
-        rc.setIndicatorDot(rc.getLocation(), 255,255,255);
         BulletInfo[] visibleBullets = rc.senseNearbyBullets();
         float bestCase = 0;
-        MapLocation moveLocation = rc.getLocation();
-        boolean standStill = true;
+        float moveRads = -1;
         for (BulletInfo bullet : visibleBullets){
             //Create projection of bullet
             float deltaRads = bullet.getDir().radiansBetween(new Direction(bullet.getLocation(), rc.getLocation()));
@@ -102,16 +100,15 @@ public class Util {
             boolean projectedHit = (projectedDist <= rc.getType().bodyRadius);
             if (projectedHit) {
                 bestCase += bullet.getDamage();     //Projected damage if we stay
-                standStill = false;
             }
         }
 
 
-        if (!standStill)
+        if (bestCase != 0)
         //If a hit is projected, find alternatives
         {
             float delta_rot = 0;
-            RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+            RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
 
             RobotInfo closest_robot = null;
             float closest_dist = Float.MAX_VALUE;
@@ -124,7 +121,7 @@ public class Util {
             }
             if (closest_robot != null) {
                 Comms.RequestHelp(Comms.help_type_fight, closest_robot.getLocation());
-                //System.out.println("Requesting Help : " + closest_robot.getLocation().toString();
+                System.out.println("Requesting Help : " + closest_robot.getLocation().toString());
                 Direction directionToClosetEnemy = rc.getLocation().directionTo(closest_robot.getLocation());
                 delta_rot = directionToClosetEnemy.radians;
                 delta_rot += Util.PI / 2;
@@ -133,13 +130,12 @@ public class Util {
 
             //Check paths 0.05 rad apart (~2.5 deg)
             for (float x = delta_rot; x < 2 * Util.PI + delta_rot; x += 0.1){
-                float i = (x % (2 * Util.PI)) - Util.PI;
+                float i = x % (float) (2 * Util.PI);
                 float currentCase = 0;
-
-                MapLocation testLocation = rc.getLocation();
-                testLocation = testLocation.add(new Direction(i), rc.getType().strideRadius ); //* (int)(bullet.getSpeed() / bullet.getLocation().distanceTo(rc.getLocation()) + 1));
-
                 for (BulletInfo bullet : visibleBullets){
+
+                    MapLocation testLocation = rc.getLocation();
+                    testLocation = testLocation.add(new Direction(i), rc.getType().strideRadius ); //* (int)(bullet.getSpeed() / bullet.getLocation().distanceTo(rc.getLocation()) + 1));
 
                     //Create projection of bullet
                     float deltaRads = bullet.getDir().radiansBetween(new Direction(bullet.getLocation(), testLocation));
@@ -155,14 +151,11 @@ public class Util {
                 if (currentCase < bestCase){
                     System.out.println(Float.toString(currentCase) + "," +  Float.toString(bestCase) + "," + rc.getHealth());
                     bestCase = currentCase;
-                    moveLocation = testLocation;
+                    moveRads = i;
 
                 }
                 if (bestCase == 0 || Clock.getBytecodesLeft() < 500){
-                    rc.setIndicatorDot(testLocation, 0, 155, 0);
                     break;
-                }else{
-                    rc.setIndicatorDot(testLocation, 155, 0, 0);
                 }
             }
         }
@@ -171,8 +164,8 @@ public class Util {
             rb.onDeathImmenent();
         }
 
-        if (rc.canMove(moveLocation) || standStill){
-            rc.move(moveLocation);
+        if (moveRads != -1 && rc.canMove(new Direction(moveRads))){
+            rc.move(new Direction(moveRads));
             return true;
         }else{
             System.out.println("Not Dodging : " + Integer.toString(Clock.getBytecodesLeft()));
