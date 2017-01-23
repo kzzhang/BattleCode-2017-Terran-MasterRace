@@ -31,12 +31,13 @@ public class Gardener extends Robot{
 
 
                 boolean shaken = false;
-                boolean planting = true;
+                boolean canPlant = true;
+                boolean canWater = true;
                 Team self = rc.getTeam();
                 TreeInfo[] close = rc.senseNearbyTrees((float)3.2, self);
                 //RobotInfo[] friendlyClose = rc.senseNearbyRobots((float)7, self);
 
-                if (planting) {
+                if (canPlant) {
                     boolean shouldPlant = true;
                     for (double i = 0.1; i < (3.14159*2); i+= 0.1){
                         float angle;
@@ -57,45 +58,119 @@ public class Gardener extends Robot{
                         }
                         if (shouldPlant){
                             if (rc.canPlantTree(positive)){
+                                canPlant = false;
                                 rc.plantTree(positive);
+                                lastPlanted = rc.senseTreeAtLocation(newTree);
+                                break;
                             }
                         }
-                        lastPlanted = rc.senseTreeAtLocation(newTree);
                     }
                 }
 
-                TreeInfo[] nearby = rc.senseNearbyTrees((float)5.0, self);
+                TreeInfo[] nearby = rc.senseNearbyTrees((float)6.0, self);
                 //watering
-                TreeInfo target = null;
-                for (TreeInfo tree : nearby){
-                    if (tree.getHealth() < 45 && rc.canWater(tree.getLocation())){
-                        if (target == null) {target = tree;}
-                        else if (target.getHealth()>tree.getHealth()){
-                            target = tree;
+                if (canWater) {
+                    TreeInfo target = null;
+                    for (TreeInfo tree : nearby) {
+                        if (tree.getHealth() < 45){
+                            if (target == null) {
+                                target = tree;
+                            }
+                            if (target.getHealth() > tree.getHealth()) {
+                                target = tree;
+                            }
                         }
                     }
-                }
-                rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
-                rc.setIndicatorDot(target.getLocation(), 0, 0, 255);
-                if (target != null){
-                    if (rc.canWater(target.getLocation())){
-                        rc.water(target.getLocation());
-                    }
-                    else {
-                        rc.move(target.getLocation());
+                    rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
+                    rc.setIndicatorDot(target.getLocation(), 0, 0, 255);
+                    if (target != null) {
                         if (rc.canWater(target.getLocation())) {
                             rc.water(target.getLocation());
+                            canWater = false;
+                        } else {
+                            rc.move(target.getLocation());
+                            if (rc.canWater(target.getLocation())) {
+                                rc.water(target.getLocation());
+                                canWater = false;
+                            }
                         }
                     }
                 }
 
+                //Todo: avoid map edges more intelligently
+                if (!rc.hasMoved() && canPlant){
+                    MapLocation home[] = rc.getInitialArchonLocations(self);
+                    MapLocation center = home[0];
+                    float scale = rc.getLocation().distanceTo(home[0]);
+                    for (MapLocation base : home){
+                        float distance = rc.getLocation().distanceTo(base);
+                        if (distance < scale){
+                            scale = distance;
+                            center = base;
+                        }
+                    }
+                    Direction moving = new Direction(center, rc.getLocation());
+                    if (rc.canMove(moving)){
+                        rc.move(moving);
+                    }else {
+                        for (double i = 0.1; i < 3.14159; i+= 0.1){
+                            float positive = moving.radians + (float)i;
+                            if (positive > 3.14159) { positive -= (3.1415*2) ;}
+                            Direction positiveDir = new Direction(positive);
+                            if (rc.canMove(positiveDir)){
+                                rc.move(positiveDir);
+                            }
+                            float negative = moving.radians - (float)i;
+                            if (negative < -3.14159) { negative += (3.1415*2) ;}
+                            Direction negativeDir = new Direction(negative);
+                            if (rc.canMove(negativeDir)){
+                                rc.move(negativeDir);
+                            }
+                        }
+                    }
+                    if (canPlant){
+                        boolean shouldPlant = true;
+                        for (double i = 0.1; i < (3.14159*2); i+= 0.1){
+                            float angle;
+                            if (lastPlanted != null){
+                                angle = new Direction(rc.getLocation(), lastPlanted.getLocation()).radians + (float)i;
+                            }
+                            else{
+                                angle = dir.radians + (float)i;
+                            }
+                            if (angle > (3.14159)) {angle -= (3.14159*2);}
+                            Direction positive = new Direction(angle);
+                            MapLocation newTree = rc.getLocation().add(positive, (float)1.0);
+                            for (TreeInfo tree : close){
+                                if (newTree.distanceTo(tree.getLocation())<= (float)3) {
+                                    shouldPlant = false;
+                                    break;
+                                }
+                            }
+                            if (shouldPlant){
+                                if (rc.canPlantTree(positive)){
+                                    canPlant = false;
+                                    rc.plantTree(positive);
+                                    lastPlanted = rc.senseTreeAtLocation(newTree);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                /*
+                nearby = rc.senseNearbyTrees((float)5.0, NEUTRAL);
                 for (int i = 0; i<nearby.length; i++){
                     if (rc.canShake(nearby[i].getID()) && nearby[i].getContainedBullets() >= 1){
                         rc.shake(nearby[i].getID());
-                        shaken = true;
-                        i = nearby.length;
+                        break;
                     }
-                }
+                    if (rc.canShake(nearby[i].getID()) && nearby[i].getContainedBullets() >= 1){
+                        rc.shake(nearby[i].getID());
+                        break;
+                    }
+                }*/
                 /*
                 //if no shake available
                 if (!shaken){
