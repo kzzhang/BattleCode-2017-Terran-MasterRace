@@ -23,7 +23,9 @@ public class Archon extends Robot{
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 Util.Comms.ClearRequest(getHelpCallback());
-
+                if (rc.getTeamBullets() >= (float)10000.0){
+                    rc.donate(rc.getTeamBullets() - rc.getTeamBullets() % (float)10.0);
+                }
                 for (int i = channel_requests; i < channel_requests + channel_requests_size; i += 4) {
                     int tickerVal = rc.readBroadcast(i + 3);
                     if (tickerVal > 0){
