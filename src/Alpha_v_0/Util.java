@@ -71,15 +71,20 @@ public class Util {
             testLocation = testLocation.add(d, rc.getType().strideRadius);
 
             //Create projection of bullet
-            float deltaRads = bullet.getDir().radiansBetween(new Direction(bullet.getLocation(), testLocation));
+            BulletVector vector = new BulletVector(bullet, rc.getType().bodyRadius);
+            if (vector.willCollideWithCircle(rc.getLocation())){
+                currentCase += bullet.getDamage();
+            }
+
+            /*float deltaRads = bullet.getDir().radiansBetween(new Direction(bullet.getLocation(), testLocation));
             float deltaDist = bullet.getLocation().distanceTo(testLocation);
             float projectedDist = (float) Math.sin(deltaRads) * deltaDist;
-
+            */
             //Project if the bullet will pass or hit
-            boolean projectedHit = (projectedDist <= rc.getType().bodyRadius);
+            /*boolean projectedHit = (projectedDist <= rc.getType().bodyRadius);
             if (projectedHit) {
                 currentCase += bullet.getDamage();     //Projected damage if we stay
-            }
+            }*/
         }
         return currentCase;
     }
@@ -89,9 +94,103 @@ public class Util {
 
         rc.setIndicatorDot(rc.getLocation(), 255,255,255);
         BulletInfo[] visibleBullets = rc.senseNearbyBullets();
+        Vector<BulletVector> bulletVectors = new Vector<>(visibleBullets.length);
+
+        boolean isMoving = false;
+
         float bestCase = 0;
         MapLocation moveLocation = rc.getLocation();
-        boolean standStill = true;
+        for (int i = 0, c = 0; i < visibleBullets.length; ++i){
+            if (moveLocation.distanceTo(visibleBullets[i].getLocation()) > rc.getType().strideRadius &&
+                    !BulletVector.isTravellingAway(visibleBullets[i], moveLocation)) {
+                bulletVectors.add(new BulletVector(visibleBullets[i], rc.getType().bodyRadius));
+                if (bulletVectors.get(c).willCollideWithCircle(rc.getLocation())) {
+                    bestCase += visibleBullets[i].getDamage();
+                }
+                rc.setIndicatorLine(new MapLocation(bulletVectors.get(c).getX0(), bulletVectors.get(c).getY0()),
+                        new MapLocation(bulletVectors.get(c).getX1(), bulletVectors.get(c).getY1()), 0, 0, 0);
+                rc.setIndicatorDot(new MapLocation(bulletVectors.get(c).getX1(), bulletVectors.get(c).getY1()), 100, 0, 100);
+                c++;
+            }
+        }
+
+
+        if (bestCase != 0) {
+            Direction closestEnemyDirection = new Direction(0);
+
+            //Find Closest Enemy Robot -- Then ask for support
+            RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+            RobotInfo closestEnemy = null;
+            float closest_dist = Float.MAX_VALUE;
+            for (RobotInfo enemy : nearbyEnemies){
+                float testDist = enemy.getLocation().distanceTo(rc.getLocation());
+                if (closestEnemy == null || testDist < closest_dist){
+                    closestEnemy = enemy;
+                    closest_dist = testDist;
+                }
+            }
+
+            if (closestEnemy != null) {
+                Comms.RequestHelp(Comms.help_type_fight, closestEnemy.getLocation());
+                closestEnemyDirection = rc.getLocation().directionTo(closestEnemy.getLocation());
+            }
+
+            Direction testDirection = closestEnemyDirection;
+            testDirection.rotateLeftDegrees(90);
+
+            final int CHECK_TICKS = 8;
+            final float CHECK_INCREMENTS_DEG = (float)360.0 / (float)CHECK_TICKS;
+
+
+            for (int i = 0; i < CHECK_TICKS; ++i){
+                float currentCase = 0;
+                testDirection = testDirection.rotateLeftDegrees(CHECK_INCREMENTS_DEG);
+
+                MapLocation testLocation = rc.getLocation().add(testDirection, rc.getType().strideRadius);
+                if (rc.canMove(testLocation)) {
+                    rc.setIndicatorDot(testLocation, 155, 0, 0);
+
+                    //System.out.println("Checkpt A: " + Float.toString(Clock.getBytecodesLeft()));
+                    for (BulletVector bulletVector : bulletVectors) {
+                        if (bulletVector.willCollideWithCircle(testLocation)) {
+                            currentCase += bulletVector.getDamage();
+                        }
+                    }
+                    //System.out.println("Checkpt B: " + Float.toString(Clock.getBytecodesLeft()));
+
+
+                    if (currentCase < bestCase) {
+                        bestCase = currentCase;
+                        moveLocation = testLocation;
+                        isMoving = true;
+                    }
+
+                /*if (bestCase == 0 || Clock.getBytecodesLeft() < 500){
+                    break;
+                }*/
+                }else{
+                    rc.setIndicatorDot(testLocation, 100, 100, 100);
+                }
+            }
+        }
+        if (bestCase == 0) {
+            rc.setIndicatorDot(moveLocation, 0, 155, 0);
+        }else{
+            rc.setIndicatorDot(moveLocation, 155, 155, 0);
+
+        }
+        if (bestCase >= (int) rc.getHealth()){
+            rb.onDeathImmenent();
+        }
+
+        if (isMoving && rc.canMove(moveLocation)){
+            rc.move(moveLocation);
+            return true;
+        }else{
+            return false;
+        }
+
+        /*boolean standStill = true;
         for (BulletInfo bullet : visibleBullets){
             //Create projection of bullet
             float deltaRads = bullet.getDir().radiansBetween(new Direction(bullet.getLocation(), rc.getLocation()));
@@ -165,19 +264,9 @@ public class Util {
                     rc.setIndicatorDot(testLocation, 155, 0, 0);
                 }
             }
-        }
+        }*/
 
-        if (bestCase >= (int) rc.getHealth()){
-            rb.onDeathImmenent();
-        }
 
-        if (rc.canMove(moveLocation) || standStill){
-            rc.move(moveLocation);
-            return true;
-        }else{
-            System.out.println("Not Dodging : " + Integer.toString(Clock.getBytecodesLeft()));
-            return false;
-        }
     }
     public static class Comms {
         public static final int help_type_null = 0;
