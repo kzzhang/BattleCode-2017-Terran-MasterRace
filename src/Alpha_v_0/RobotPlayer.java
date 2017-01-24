@@ -39,14 +39,9 @@ public strictfp class RobotPlayer {
                 archon.run();
                 break;
             case GARDENER:
-<<<<<<< HEAD
                 Gardener gardener = new Gardener(rc, Util.type_gardener);
                 gardener.run();
                 //runGardener(); //PLO: Need this for testing - Pat
-=======
-                //Gardener.run(rc);
-                runGardener(); //PLO: Need this for testing - Pat
->>>>>>> origin/master
                 break;
             case SOLDIER:
                 Soldier soldier = new Soldier(rc, Util.type_soldier);
