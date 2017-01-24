@@ -2,6 +2,7 @@ package Alpha_v_0;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
+import battlecode.common.Team;
 
 /**
  * Created by patri on 2017-01-17.
@@ -9,6 +10,7 @@ import battlecode.common.RobotController;
 public abstract class Robot{
     RobotController rc;
     final int robotType;
+    Team EnemyTeam, OurTeam;
 
     private int help_callback = -1;
 
@@ -17,6 +19,8 @@ public abstract class Robot{
         robotType = type;
         Util.init(this, _rc);
         Util.incrementUnitCount(type);
+        EnemyTeam = rc.getTeam().opponent();
+        OurTeam = rc.getTeam();
     }
 
 
