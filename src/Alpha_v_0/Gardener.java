@@ -14,6 +14,7 @@ public class Gardener extends Robot{
     Gardener(RobotController rc, int type){
         super(rc, type);
     }
+    Direction goal = null;
 
     @Override
     public void run() throws GameActionException {
@@ -34,7 +35,7 @@ public class Gardener extends Robot{
                 boolean canPlant = true;
                 boolean canWater = true;
                 Team self = rc.getTeam();
-                TreeInfo[] close = rc.senseNearbyTrees((float)3.2, self);
+                TreeInfo[] close = rc.senseNearbyTrees((float)4.2, self);
                 //RobotInfo[] friendlyClose = rc.senseNearbyRobots((float)7, self);
 
                 if (canPlant) {
@@ -51,7 +52,7 @@ public class Gardener extends Robot{
                         Direction positive = new Direction(angle);
                         MapLocation newTree = rc.getLocation().add(positive, (float)1.0);
                         for (TreeInfo tree : close){
-                            if (newTree.distanceTo(tree.getLocation())<= (float)3) {
+                            if (newTree.distanceTo(tree.getLocation())<= (float)3.2) {
                                 shouldPlant = false;
                                 break;
                             }
@@ -67,17 +68,28 @@ public class Gardener extends Robot{
                     }
                 }
 
-                TreeInfo[] nearby = rc.senseNearbyTrees((float)6.0, self);
+                TreeInfo[] nearby = rc.senseNearbyTrees((float)5.2, self);
                 //watering
                 if (canWater) {
                     TreeInfo target = null;
                     for (TreeInfo tree : nearby) {
-                        if (tree.getHealth() < 45){
+                        if (tree.getHealth() < 40 || (tree.getHealth() < 45 && rc.getLocation().distanceTo(tree.getLocation())<1.2)){
                             if (target == null) {
                                 target = tree;
                             }
                             if (target.getHealth() > tree.getHealth()) {
-                                target = tree;
+                                RobotInfo allies[] = rc.senseNearbyRobots(7, self);
+                                boolean isClosest = true;
+                                float distance = rc.getLocation().distanceTo(target.getLocation());
+                                for (RobotInfo robot : allies){
+                                    if (robot.getType() == RobotType.GARDENER){
+                                        if (robot.getLocation().distanceTo(target.getLocation()) < distance){
+                                            isClosest = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (isClosest) { target = tree; }
                             }
                         }
                     }
@@ -88,7 +100,25 @@ public class Gardener extends Robot{
                             rc.water(target.getLocation());
                             canWater = false;
                         } else {
-                            rc.move(target.getLocation());
+                            Direction toTree = new Direction(rc.getLocation(), target.getLocation());
+                            if (rc.canMove(toTree)){
+                                rc.move(toTree);
+                            }else {
+                                for (double i = 0.1; i < 3.14159; i+= 0.1){
+                                    float positive = toTree.radians + (float)i;
+                                    if (positive > (3.14159)) { positive -= (3.1415*2); }
+                                    Direction posDir = new Direction(toTree.radians + (float)i);
+                                    if (rc.canMove(posDir)){
+                                        rc.move(posDir);
+                                    }
+                                    float negative = toTree.radians - (float)i;
+                                    if (negative < -3.14159) { negative += (3.1415*2) ;}
+                                    Direction negativeDir = new Direction(negative);
+                                    if (rc.canMove(negativeDir)){
+                                        rc.move(negativeDir);
+                                    }
+                                }
+                            }
                             if (rc.canWater(target.getLocation())) {
                                 rc.water(target.getLocation());
                                 canWater = false;
@@ -98,29 +128,31 @@ public class Gardener extends Robot{
                 }
 
                 //Todo: avoid map edges more intelligently
-                if (!rc.hasMoved() && canPlant){
-                    MapLocation home[] = rc.getInitialArchonLocations(self);
-                    MapLocation center = home[0];
-                    float scale = rc.getLocation().distanceTo(home[0]);
-                    for (MapLocation base : home){
-                        float distance = rc.getLocation().distanceTo(base);
-                        if (distance < scale){
-                            scale = distance;
-                            center = base;
+                if (!rc.hasMoved()){
+                    if (goal == null) {
+                        MapLocation home[] = rc.getInitialArchonLocations(self);
+                        MapLocation center = home[0];
+                        float scale = rc.getLocation().distanceTo(home[0]);
+                        for (MapLocation base : home) {
+                            float distance = rc.getLocation().distanceTo(base);
+                            if (distance < scale) {
+                                scale = distance;
+                                center = base;
+                            }
                         }
+                        goal = new Direction(center, rc.getLocation());
                     }
-                    Direction moving = new Direction(center, rc.getLocation());
-                    if (rc.canMove(moving)){
-                        rc.move(moving);
+                    if (rc.canMove(goal)){
+                        rc.move(goal);
                     }else {
                         for (double i = 0.1; i < 3.14159; i+= 0.1){
-                            float positive = moving.radians + (float)i;
+                            float positive = goal.radians + (float)i;
                             if (positive > 3.14159) { positive -= (3.1415*2) ;}
                             Direction positiveDir = new Direction(positive);
                             if (rc.canMove(positiveDir)){
                                 rc.move(positiveDir);
                             }
-                            float negative = moving.radians - (float)i;
+                            float negative = goal.radians - (float)i;
                             if (negative < -3.14159) { negative += (3.1415*2) ;}
                             Direction negativeDir = new Direction(negative);
                             if (rc.canMove(negativeDir)){

@@ -13,6 +13,9 @@ public class Archon extends Robot{
     Archon(RobotController rc, int type){
         super(rc, type);
     }
+
+    float angle = 0;
+
     @Override
     public void run() throws GameActionException{
         int GardenerCount = 0;
@@ -31,12 +34,20 @@ public class Archon extends Robot{
                     }
                 }
 
+
                 for (float d = (float)(0.0); d < Math.PI; d += 0.1){
-                    Direction dir = new Direction(d);
-                    if (rc.canHireGardener(dir) && Math.random() < (.01/(2*Math.PI))){
+                    Direction dir = new Direction(angle);
+                    //if (rc.canHireGardener(dir) && Math.random() < (.01/(2*Math.PI))){
+                    if (rc.canHireGardener(dir) && GardenerCount < 6){
                         rc.hireGardener(dir);
+                        angle += (3.14159/4);
+                        if (angle > 3.14159) { angle -= (3.1415*2); }
                         GardenerCount++;
                         break;
+                    }
+                    else if (GardenerCount < 6) {
+                        angle += (3.14159/8);
+                        if (angle > 3.14159) { angle -= (3.1415*2); }
                     }
                 }
 
