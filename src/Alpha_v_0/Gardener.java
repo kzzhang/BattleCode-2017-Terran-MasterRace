@@ -36,25 +36,35 @@ public class Gardener extends Robot{
                 boolean canWater = true;
                 Team self = rc.getTeam();
                 TreeInfo[] close = rc.senseNearbyTrees((float)4.2, self);
+                MapLocation home[] = rc.getInitialArchonLocations(self);
                 //RobotInfo[] friendlyClose = rc.senseNearbyRobots((float)7, self);
 
                 if (canPlant) {
                     boolean shouldPlant = true;
-                    for (double i = 0.1; i < (3.14159*2); i+= 0.1){
+                    for (double i = 0.1; i < (3.14159*2); i+= 0.1) {
                         float angle;
-                        if (lastPlanted != null){
-                            angle = new Direction(rc.getLocation(), lastPlanted.getLocation()).radians + (float)i;
+                        if (lastPlanted != null) {
+                            angle = new Direction(rc.getLocation(), lastPlanted.getLocation()).radians + (float) i;
+                        } else {
+                            angle = dir.radians + (float) i;
                         }
-                        else{
-                            angle = dir.radians + (float)i;
+                        if (angle > (3.14159)) {
+                            angle -= (3.14159 * 2);
                         }
-                        if (angle > (3.14159)) {angle -= (3.14159*2);}
                         Direction positive = new Direction(angle);
-                        MapLocation newTree = rc.getLocation().add(positive, (float)1.0);
-                        for (TreeInfo tree : close){
-                            if (newTree.distanceTo(tree.getLocation())<= (float)3.2) {
+                        MapLocation newTree = rc.getLocation().add(positive, (float) 1.0);
+                        for (TreeInfo tree : close) {
+                            if (newTree.distanceTo(tree.getLocation()) <= (float) 3.2) {
                                 shouldPlant = false;
                                 break;
+                            }
+                        }
+                        if (shouldPlant){
+                            for (MapLocation archon : home) {
+                                if (newTree.distanceTo(archon) <= 3.2) {
+                                    shouldPlant = false;
+                                    break;
+                                }
                             }
                         }
                         if (shouldPlant){
@@ -130,7 +140,6 @@ public class Gardener extends Robot{
                 //Todo: avoid map edges more intelligently
                 if (!rc.hasMoved()){
                     if (goal == null) {
-                        MapLocation home[] = rc.getInitialArchonLocations(self);
                         MapLocation center = home[0];
                         float scale = rc.getLocation().distanceTo(home[0]);
                         for (MapLocation base : home) {
