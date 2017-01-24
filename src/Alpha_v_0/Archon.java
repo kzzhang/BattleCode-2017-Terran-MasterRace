@@ -51,7 +51,7 @@ public class Archon extends Robot{
                     }
                 }
 
-                Util.dodge(rc);
+                Util.dodge();
                 //Find best case movement -> if unavoidable take the lowest damage bullet
                 Clock.yield();
             } catch (Exception e) {

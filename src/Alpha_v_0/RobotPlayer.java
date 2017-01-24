@@ -1,6 +1,6 @@
 package Alpha_v_0;
 import battlecode.common.*;
-import scala.tools.cmd.gen.AnyVals;
+
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -148,7 +148,7 @@ public strictfp class RobotPlayer {
                     }
                 }
 
-                if (!Util.dodge(rc)) {
+                if (!Util.dodge()) {
                     Direction dir = randomDirection();
                     if (Util.safeMove(rc, dir) == 0) {
                         tryMove(dir);
