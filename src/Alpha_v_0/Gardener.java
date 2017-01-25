@@ -30,18 +30,15 @@ public class Gardener extends Robot{
                 //int yPos = rc.readBroadcast(1);
                 //MapLocation archonLoc = new MapLocation(xPos,yPos);
 
-
-                boolean shaken = false;
                 boolean canPlant = true;
                 boolean canWater = true;
                 Team self = rc.getTeam();
-                TreeInfo[] close = rc.senseNearbyTrees((float)4.2, self);
+                TreeInfo[] close = rc.senseNearbyTrees((float)4.5, self);
                 MapLocation home[] = rc.getInitialArchonLocations(self);
-                //RobotInfo[] friendlyClose = rc.senseNearbyRobots((float)7, self);
 
                 if (canPlant) {
                     boolean shouldPlant = true;
-                    for (double i = 0.1; i < (3.14159*2); i+= 0.1) {
+                    for (double i = 0.5; i < (3.14159*2); i+= 0.4) {
                         float angle;
                         if (lastPlanted != null) {
                             angle = new Direction(rc.getLocation(), lastPlanted.getLocation()).radians + (float) i;
@@ -61,7 +58,7 @@ public class Gardener extends Robot{
                         }
                         if (shouldPlant){
                             for (MapLocation archon : home) {
-                                if (newTree.distanceTo(archon) <= 3.2) {
+                                if (newTree.distanceTo(archon) <= 3.1) {
                                     shouldPlant = false;
                                     break;
                                 }
@@ -78,11 +75,10 @@ public class Gardener extends Robot{
                     }
                 }
 
-                TreeInfo[] nearby = rc.senseNearbyTrees((float)5.2, self);
                 //watering
                 if (canWater) {
                     TreeInfo target = null;
-                    for (TreeInfo tree : nearby) {
+                    for (TreeInfo tree : close) {
                         if (tree.getHealth() < 40 || (tree.getHealth() < 45 && rc.getLocation().distanceTo(tree.getLocation())<1.2)){
                             if (target == null) {
                                 target = tree;
@@ -114,10 +110,10 @@ public class Gardener extends Robot{
                             if (rc.canMove(toTree)){
                                 rc.move(toTree);
                             }else {
-                                for (double i = 0.1; i < 3.14159; i+= 0.1){
+                                for (double i = 0.1; i < 3.14159; i+= 0.4){
                                     float positive = toTree.radians + (float)i;
                                     if (positive > (3.14159)) { positive -= (3.1415*2); }
-                                    Direction posDir = new Direction(toTree.radians + (float)i);
+                                    Direction posDir = new Direction(positive);
                                     if (rc.canMove(posDir)){
                                         rc.move(posDir);
                                     }
@@ -154,7 +150,7 @@ public class Gardener extends Robot{
                     if (rc.canMove(goal)){
                         rc.move(goal);
                     }else {
-                        for (double i = 0.1; i < 3.14159; i+= 0.1){
+                        for (double i = 0.1; i < 3.14159; i+= 0.4){
                             float positive = goal.radians + (float)i;
                             if (positive > 3.14159) { positive -= (3.1415*2) ;}
                             Direction positiveDir = new Direction(positive);
@@ -171,7 +167,7 @@ public class Gardener extends Robot{
                     }
                     if (canPlant){
                         boolean shouldPlant = true;
-                        for (double i = 0.1; i < (3.14159*2); i+= 0.1){
+                        for (double i = 0.5; i < (3.14159*2); i+= 0.4){
                             float angle;
                             if (lastPlanted != null){
                                 angle = new Direction(rc.getLocation(), lastPlanted.getLocation()).radians + (float)i;
@@ -190,7 +186,6 @@ public class Gardener extends Robot{
                             }
                             if (shouldPlant){
                                 if (rc.canPlantTree(positive)){
-                                    canPlant = false;
                                     rc.plantTree(positive);
                                     lastPlanted = rc.senseTreeAtLocation(newTree);
                                     break;
