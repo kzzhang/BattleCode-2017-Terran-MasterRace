@@ -22,6 +22,7 @@ public class Gardener extends Robot{
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
+
                 // Generate a random direction
                 Direction dir = randomDirection();
 
@@ -33,8 +34,18 @@ public class Gardener extends Robot{
                 boolean canPlant = true;
                 boolean canWater = true;
                 Team self = rc.getTeam();
-                TreeInfo[] close = rc.senseNearbyTrees((float)4.5, self);
+                TreeInfo[] close = rc.senseNearbyTrees((float)4, self);
                 MapLocation home[] = rc.getInitialArchonLocations(self);
+
+                MapLocation center = home[0];
+                float scale = rc.getLocation().distanceTo(home[0]);
+                for (MapLocation base : home) {
+                    float distance = rc.getLocation().distanceTo(base);
+                    if (distance < scale) {
+                        scale = distance;
+                        center = base;
+                    }
+                }
 
                 if (canPlant) {
                     boolean shouldPlant = true;
@@ -56,12 +67,11 @@ public class Gardener extends Robot{
                                 break;
                             }
                         }
+
                         if (shouldPlant){
-                            for (MapLocation archon : home) {
-                                if (newTree.distanceTo(archon) <= 3.1) {
-                                    shouldPlant = false;
-                                    break;
-                                }
+                            if (newTree.distanceTo(center) <= 4.1) {
+                                shouldPlant = false;
+                                break;
                             }
                         }
                         if (shouldPlant){
@@ -100,7 +110,7 @@ public class Gardener extends Robot{
                         }
                     }
                     rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
-                    rc.setIndicatorDot(target.getLocation(), 0, 0, 255);
+                    if (target != null) rc.setIndicatorDot(target.getLocation(), 0, 0, 255);
                     if (target != null) {
                         if (rc.canWater(target.getLocation())) {
                             rc.water(target.getLocation());
@@ -110,7 +120,7 @@ public class Gardener extends Robot{
                             if (rc.canMove(toTree)){
                                 rc.move(toTree);
                             }else {
-                                for (double i = 0.1; i < 3.14159; i+= 0.4){
+                                for (double i = 0.1; i < (3.14159/4); i+= 0.4){
                                     float positive = toTree.radians + (float)i;
                                     if (positive > (3.14159)) { positive -= (3.1415*2); }
                                     Direction posDir = new Direction(positive);
@@ -133,18 +143,9 @@ public class Gardener extends Robot{
                     }
                 }
 
-                //Todo: avoid map edges more intelligently
+                //Todo: if blocked, stop trying to go water
                 if (!rc.hasMoved()){
                     if (goal == null) {
-                        MapLocation center = home[0];
-                        float scale = rc.getLocation().distanceTo(home[0]);
-                        for (MapLocation base : home) {
-                            float distance = rc.getLocation().distanceTo(base);
-                            if (distance < scale) {
-                                scale = distance;
-                                center = base;
-                            }
-                        }
                         goal = new Direction(center, rc.getLocation());
                     }
                     if (rc.canMove(goal)){
@@ -156,12 +157,14 @@ public class Gardener extends Robot{
                             Direction positiveDir = new Direction(positive);
                             if (rc.canMove(positiveDir)){
                                 rc.move(positiveDir);
+                                goal = positiveDir;
                             }
                             float negative = goal.radians - (float)i;
                             if (negative < -3.14159) { negative += (3.1415*2) ;}
                             Direction negativeDir = new Direction(negative);
                             if (rc.canMove(negativeDir)){
                                 rc.move(negativeDir);
+                                goal = negativeDir;
                             }
                         }
                     }
@@ -253,7 +256,6 @@ public class Gardener extends Robot{
 
 
                     //take shortest path to closest tree
-
                     Direction direction;
                     if (posClosestNeutral != null) direction = new Direction(rc.getLocation(), posClosestNeutral);
                     else{
