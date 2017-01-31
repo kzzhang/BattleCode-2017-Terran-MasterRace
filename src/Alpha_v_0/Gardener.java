@@ -3,6 +3,7 @@ package Alpha_v_0;
 import battlecode.common.*;
 
 import static Alpha_v_0.RobotPlayer.randomDirection;
+import static Alpha_v_0.RobotPlayer.rc;
 import static Alpha_v_0.RobotPlayer.tryMove;
 import static battlecode.common.Team.NEUTRAL;
 
@@ -11,10 +12,16 @@ import static battlecode.common.Team.NEUTRAL;
  */
 public class Gardener extends Robot{
     TreeInfo lastPlanted = null;
+    MapLocation lastGoal = null;
+    int lastGoalRound = 0;
+    int round = 0;
     Gardener(RobotController rc, int type){
         super(rc, type);
     }
     Direction goal = null;
+    boolean canPlant;
+    boolean canWater;
+    boolean canMove;
 
     @Override
     public void run() throws GameActionException {
@@ -22,7 +29,7 @@ public class Gardener extends Robot{
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-
+                round++;
                 // Generate a random direction
                 Direction dir = randomDirection();
 
@@ -31,25 +38,29 @@ public class Gardener extends Robot{
                 //int yPos = rc.readBroadcast(1);
                 //MapLocation archonLoc = new MapLocation(xPos,yPos);
 
-                boolean canPlant = true;
-                boolean canWater = true;
+                canPlant = true;
+                canWater = true;
+                canMove = false;
+
                 Team self = rc.getTeam();
-                TreeInfo[] close = rc.senseNearbyTrees((float)4, self);
+                TreeInfo[] close = rc.senseNearbyTrees((float)4.5, self);
                 MapLocation home[] = rc.getInitialArchonLocations(self);
 
-                MapLocation center = home[0];
+                MapLocation temp = home[0];
                 float scale = rc.getLocation().distanceTo(home[0]);
                 for (MapLocation base : home) {
                     float distance = rc.getLocation().distanceTo(base);
                     if (distance < scale) {
                         scale = distance;
-                        center = base;
+                        temp = base;
                     }
                 }
+                final MapLocation center = temp;
+
 
                 if (canPlant) {
                     boolean shouldPlant = true;
-                    for (double i = 0.5; i < (3.14159*2); i+= 0.4) {
+                    for (double i = 0; i < (3.14159*2); i+= 0.2) {
                         float angle;
                         if (lastPlanted != null) {
                             angle = new Direction(rc.getLocation(), lastPlanted.getLocation()).radians + (float) i;
@@ -57,7 +68,7 @@ public class Gardener extends Robot{
                             angle = dir.radians + (float) i;
                         }
                         if (angle > (3.14159)) {
-                            angle -= (3.14159 * 2);
+                            angle -= (3.1415 * 2);
                         }
                         Direction positive = new Direction(angle);
                         MapLocation newTree = rc.getLocation().add(positive, (float) 1.0);
@@ -69,7 +80,7 @@ public class Gardener extends Robot{
                         }
 
                         if (shouldPlant){
-                            if (newTree.distanceTo(center) <= 4.1) {
+                            if (newTree.distanceTo(center) <= 3.5) {
                                 shouldPlant = false;
                                 break;
                             }
@@ -83,29 +94,91 @@ public class Gardener extends Robot{
                             }
                         }
                     }
+                    canMove = true;
+
+                    if (!rc.hasMoved()){
+                        if (goal == null) {
+                            goal = new Direction(center, rc.getLocation());
+                        }
+
+                        if (rc.canMove(goal)){
+                            rc.move(goal);
+                        }else {
+                            for (double i = 0.1; i < 3.14159; i+= 0.2){
+                                float positive = goal.radians + (float)i;
+                                if (positive > 3.14159) { positive -= (3.1415*2) ;}
+                                Direction positiveDir = new Direction(positive);
+                                if (rc.canMove(positiveDir)){
+                                    rc.move(positiveDir);
+                                    goal = positiveDir;
+                                }
+                                float negative = goal.radians - (float)i;
+                                if (negative < -3.14159) { negative += (3.1415*2) ;}
+                                Direction negativeDir = new Direction(negative);
+                                if (rc.canMove(negativeDir)){
+                                    rc.move(negativeDir);
+                                    goal = negativeDir;
+                                }
+                            }
+                        }
+                        if (canPlant){
+                            shouldPlant = true;
+                            for (double i = 0; i < (3.14159*2); i+= 0.1){
+                                float angle;
+                                if (lastPlanted != null){
+                                    angle = new Direction(rc.getLocation(), lastPlanted.getLocation()).radians + (float)i;
+                                }
+                                else{
+                                    angle = dir.radians + (float)i;
+                                }
+                                if (angle > (3.14159)) {angle -= (3.1415*2);}
+                                Direction positive = new Direction(angle);
+                                MapLocation newTree = rc.getLocation().add(positive, (float)1.0);
+                                for (TreeInfo tree : close){
+                                    if (newTree.distanceTo(tree.getLocation())<= (float)3) {
+                                        shouldPlant = false;
+                                        break;
+                                    }
+                                }
+                                if (shouldPlant){
+                                    if (rc.canPlantTree(positive)){
+                                        rc.plantTree(positive);
+                                        lastPlanted = rc.senseTreeAtLocation(newTree);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 //watering
                 if (canWater) {
                     TreeInfo target = null;
                     for (TreeInfo tree : close) {
-                        if (tree.getHealth() < 40 || (tree.getHealth() < 45 && rc.getLocation().distanceTo(tree.getLocation())<1.2)){
-                            if (target == null) {
-                                target = tree;
-                            }
-                            if (target.getHealth() > tree.getHealth()) {
-                                RobotInfo allies[] = rc.senseNearbyRobots(7, self);
-                                boolean isClosest = true;
-                                float distance = rc.getLocation().distanceTo(target.getLocation());
-                                for (RobotInfo robot : allies){
-                                    if (robot.getType() == RobotType.GARDENER){
-                                        if (robot.getLocation().distanceTo(target.getLocation()) < distance){
-                                            isClosest = false;
-                                            break;
+                        if (lastGoal != tree.getLocation()) {
+                            if (tree.getHealth() < 40 || (tree.getHealth() < 45 && rc.getLocation().distanceTo(tree.getLocation()) < 1.2)) {
+                                if (target == null) {
+                                    target = tree;
+                                }
+                                if (target.getHealth() > tree.getHealth()) {
+                                    RobotInfo allies[] = rc.senseNearbyRobots(7, self);
+                                    boolean isClosest = true;
+                                    float distance = rc.getLocation().distanceTo(target.getLocation());
+                                    for (RobotInfo robot : allies) {
+                                        if (robot.getType() == RobotType.GARDENER) {
+                                            if (robot.getLocation().distanceTo(target.getLocation()) < distance) {
+                                                isClosest = false;
+                                                lastGoal = target.getLocation();
+                                                lastGoalRound = round;
+                                                break;
+                                            }
                                         }
                                     }
+                                    if (isClosest) {
+                                        target = tree;
+                                    }
                                 }
-                                if (isClosest) { target = tree; }
                             }
                         }
                     }
@@ -120,7 +193,7 @@ public class Gardener extends Robot{
                             if (rc.canMove(toTree)){
                                 rc.move(toTree);
                             }else {
-                                for (double i = 0.1; i < (3.14159/4); i+= 0.4){
+                                for (double i = 0.1; i < (3.14159/2.5); i+= 0.2){
                                     float positive = toTree.radians + (float)i;
                                     if (positive > (3.14159)) { positive -= (3.1415*2); }
                                     Direction posDir = new Direction(positive);
@@ -143,15 +216,17 @@ public class Gardener extends Robot{
                     }
                 }
 
+                /*
                 //Todo: if blocked, stop trying to go water
-                if (!rc.hasMoved()){
+                if (!rc.hasMoved() && canPlant && canWater && canMove){
                     if (goal == null) {
                         goal = new Direction(center, rc.getLocation());
                     }
+
                     if (rc.canMove(goal)){
                         rc.move(goal);
                     }else {
-                        for (double i = 0.1; i < 3.14159; i+= 0.4){
+                        for (double i = 0.1; i < 3.14159; i+= 0.2){
                             float positive = goal.radians + (float)i;
                             if (positive > 3.14159) { positive -= (3.1415*2) ;}
                             Direction positiveDir = new Direction(positive);
@@ -170,7 +245,7 @@ public class Gardener extends Robot{
                     }
                     if (canPlant){
                         boolean shouldPlant = true;
-                        for (double i = 0.5; i < (3.14159*2); i+= 0.4){
+                        for (double i = 0; i < (3.14159*2); i+= 0.1){
                             float angle;
                             if (lastPlanted != null){
                                 angle = new Direction(rc.getLocation(), lastPlanted.getLocation()).radians + (float)i;
@@ -178,7 +253,7 @@ public class Gardener extends Robot{
                             else{
                                 angle = dir.radians + (float)i;
                             }
-                            if (angle > (3.14159)) {angle -= (3.14159*2);}
+                            if (angle > (3.14159)) {angle -= (3.1415*2);}
                             Direction positive = new Direction(angle);
                             MapLocation newTree = rc.getLocation().add(positive, (float)1.0);
                             for (TreeInfo tree : close){
@@ -196,6 +271,11 @@ public class Gardener extends Robot{
                             }
                         }
                     }
+                }*/
+
+                if (round - lastGoalRound > 5){
+                    lastGoal = null;
+                    lastGoalRound = round;
                 }
 
                 /*
