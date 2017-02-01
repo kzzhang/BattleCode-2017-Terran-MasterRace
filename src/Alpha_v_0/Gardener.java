@@ -80,7 +80,7 @@ public class Gardener extends Robot{
                         }
 
                         if (shouldPlant){
-                            if (newTree.distanceTo(center) <= 3.5) {
+                            if (newTree.distanceTo(center) <= 4.1) {
                                 shouldPlant = false;
                                 break;
                             }
@@ -216,9 +216,9 @@ public class Gardener extends Robot{
                     }
                 }
 
-                /*
                 //Todo: if blocked, stop trying to go water
-                if (!rc.hasMoved() && canPlant && canWater && canMove){
+                //if (!rc.hasMoved() && canPlant && canWater && (rc.getTeamBullets() > 50)){
+                if (false){
                     if (goal == null) {
                         goal = new Direction(center, rc.getLocation());
                     }
@@ -263,6 +263,12 @@ public class Gardener extends Robot{
                                 }
                             }
                             if (shouldPlant){
+                                if (newTree.distanceTo(center) <= 4.1) {
+                                    shouldPlant = false;
+                                    break;
+                                }
+                            }
+                            if (shouldPlant){
                                 if (rc.canPlantTree(positive)){
                                     rc.plantTree(positive);
                                     lastPlanted = rc.senseTreeAtLocation(newTree);
@@ -271,7 +277,7 @@ public class Gardener extends Robot{
                             }
                         }
                     }
-                }*/
+                }
 
                 if (round - lastGoalRound > 5){
                     lastGoal = null;
